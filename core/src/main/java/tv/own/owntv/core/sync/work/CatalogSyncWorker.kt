@@ -34,7 +34,9 @@ class CatalogSyncWorker(
     private val watchSession: tv.own.owntv.core.live.WatchSession,
 ) : CoroutineWorker(context, params) {
 
-    override suspend fun doWork(): Result {
+    override suspend fun doWork(): Result = SyncGate.run { runSync() }
+
+    private suspend fun runSync(): Result {
         val sourceId = inputData.getLong(KEY_SOURCE_ID, -1L)
         val reason = inputData.getString(KEY_REASON) ?: "unknown"
         val baseItemCount = inputData.getInt(KEY_BASE_ITEM_COUNT, 0)

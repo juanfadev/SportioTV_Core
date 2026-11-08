@@ -41,7 +41,9 @@ class EpgSyncWorker(
             localeStore = localeStore,
         )
 
-    override suspend fun doWork(): Result {
+    override suspend fun doWork(): Result = SyncGate.run { runSync() }
+
+    private suspend fun runSync(): Result {
         val sourceId = inputData.getLong(KEY_SOURCE_ID, Long.MIN_VALUE)
         val reason = inputData.getString(KEY_REASON) ?: "unknown"
         if (sourceId == Long.MIN_VALUE) return Result.failure()

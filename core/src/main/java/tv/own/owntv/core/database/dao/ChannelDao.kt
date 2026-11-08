@@ -24,6 +24,12 @@ data class ChannelGuideKey(
     val epgChannelId: String,
 )
 
+/** One source and how many channels it holds — see [ChannelDao.countsBySourceOnce]. */
+data class SourceChannelCount(
+    val sourceId: Long,
+    val n: Int,
+)
+
 /** A channel plus when it was last watched — for the Home screen's recent/continue rows. */
 data class ChannelWithWatchedAt(
     @Embedded val channel: ChannelEntity,
@@ -344,6 +350,11 @@ interface ChannelDao {
 
     @Query("SELECT COUNT(*) FROM channels WHERE sourceId = :sourceId")
     suspend fun countForSourceOnce(sourceId: Long): Int
+
+    /** Channel count of every source in one pass: the playlist picker lists them all and must not
+     *  run one query per playlist (609 of them froze the menu while the database was busy syncing). */
+    @Query("SELECT sourceId AS sourceId, COUNT(*) AS n FROM channels GROUP BY sourceId")
+    suspend fun countsBySourceOnce(): List<SourceChannelCount>
 
     /** Observed catch-up channel count — drives the Live TV list count AND whether the Catch-up rail
      *  entry is offered at all (a provider with no archive must not get a permanently empty folder). */
